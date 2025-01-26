@@ -1,0 +1,4 @@
+exports_files(
+    ["pyproject.toml"],
+    visibility = ["//visibility:public"],
+)

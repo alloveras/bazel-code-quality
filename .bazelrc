@@ -1,0 +1,143 @@
+# IMPORTANT: The order of the different sections of this configuration file isn't arbitrary. It
+# matches the same precedence and inheritance rules Bazel will use to parse its contents.
+# See: https://bazel.build/run/bazelrc#option-defaults
+
+# ================================================================================================ #
+# Startup Options
+# ================================================================================================ #
+
+# A 2GB max heap size is currently enough for this repository. This may need to be increased in the
+# future if Bazel starts OOM due to organic codebase growth. This number should not be bumped
+# arbitrarily. Doing so can hide symptoms of bigger issues such as sub-optimal rule implementations
+# which have a huge negative impact on engineering productivity.
+# See: https://docs.bazel.build/versions/main/skylark/performance.html
+startup --host_jvm_args="-Xmx2G"
+
+# Our bazel instance is now a biggish memory user. Be a nice citizen and best-effort try to
+# reduce TLB footprint by allocating fewer+larger memory pages.
+# Ignored on platforms/configurations where it's not applicable.
+startup --host_jvm_args=-XX:+UseLargePages
+
+# With TLS 1.3, we run into the following error on Darwin.
+# > No subject alternative DNS name matching github-releases.githubusercontent.com found.
+# It looks like this is a result of SNI being broken on TLS 1.3 which results in us getting
+# a certificate for githubassets.com instead.
+#
+# Taken from: https://github.com/digital-asset/daml/pull/8697
+startup --host_jvm_args="-Djdk.tls.client.protocols=TLSv1.2"
+
+# Ensure that the Bazel server process notices directory changes when they are listed as "srcs" of
+# some build targets. Ideally, we don't track directories as "srcs" for build targets but, if we
+# do, it's better to ensure that Bazel will handle them correctly.
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+
+# ================================================================================================ #
+# Common Options
+# ================================================================================================ #
+
+# Ensures that @local_config_cc toolchains aren't considered during toolchain resolution to
+# keep builds hermetic (see: https://github.com/bazelbuild/bazel/issues/12712).
+#
+#  - incompatible_enable_cc_toolchain_resolution=true: Disable the legacy toolchain infrastructure
+#    for C/C++ and use Bazel's toolchain resolution system instead.
+#
+#  - incompatible_use_cc_configure_from_rules_cc=true: Do not use "cc_configure" from
+#    "@bazel_tools//tools/cpp/cc_configure.bzl" and, instead, use "rules_cc_toolchains"
+#    from "@rules_cc//cc/repositories.bzl" if configuring C/C++ toolchains is necessary.
+#
+#  - BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1: Do not try to auto-detect any C/C++
+#    toolchains on the host platform.
+#
+#  - BAZEL_USE_CPP_ONLY_TOOLCHAIN=1: Do not consider any XCode-based C/C++
+#    toolchains.
+
+common --incompatible_enable_cc_toolchain_resolution=true
+common --incompatible_use_cc_configure_from_rules_cc=true
+
+common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+common --repo_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
+
+common --repo_env=http_proxy
+common --repo_env=https_proxy
+common --repo_env=HTTP_PROXY
+common --repo_env=HTTPS_PROXY
+common --repo_env=NO_PROXY
+common --repo_env=ALL_PROXY
+common --repo_env=no_proxy
+common --repo_env=all_proxy
+
+# ================================================================================================ #
+# Build & Query Options
+# Note that if a flag for `build` has an equivalent flag for `query`, it should be added here to
+# prevent bazel from invalidating the workspace and re-downloading/compiling artefacts.
+# `query` DOES NOT inherit options from `build`, while `test` does.
+# ================================================================================================ #
+
+# Java toolchain.
+build --java_language_version=17
+build --tool_java_language_version=17
+build --java_runtime_version=remotejdk_17
+build --tool_java_runtime_version=remotejdk_17
+
+# Memoize Merkle tree calculations to improve the remote cache hit checking speed.
+common --experimental_remote_merkle_tree_cache=true
+common --experimental_remote_merkle_tree_cache_size=10000
+
+# Forbid non-hermetic actions/tests which depend on remote services. Tag an individual targets with
+# tags=["requires-network"] to opt-out of the enforcement.
+build --sandbox_default_allow_network=false
+
+# Forbid environment variables such as $PATH to sneak into the build, which can cause massive cache
+# misses if they change.
+build --incompatible_strict_action_env=true
+
+# Save time on sandbox creation and deletion when many actions of the same kind run during the build.
+build --reuse_sandbox_directories=true
+
+# Improves the sandbox performance by skipping the creation of the deprecated
+# <workspace-name>/external/<repository> symlinks.
+build --legacy_external_runfiles=false
+
+# Speed up all builds by not checking if output files have been modified.
+build --experimental_check_output_files=false
+fetch --experimental_check_output_files=false
+query --experimental_check_output_files=false
+
+# Instruct Bazel NOT to check for out-of-band modifications to the external repository directories.
+# This speeds up every Bazel invocation by avoiding additional IO operations. However, it comes at
+# the expense of being a tiny bit more exposed to build reproducibility issues.
+build --experimental_check_external_repository_files=false
+
+# Do not upload artifacts referenced in the BEP if the action cannot be
+# cached remotely.
+build --remote_build_event_upload=minimal
+fetch --remote_build_event_upload=minimal
+query --remote_build_event_upload=minimal
+
+# Fixes builds hanging on CI that get the TCP connection closed without sending RST packets.
+# Docs: https://bazel.build/reference/command-line-reference#flag--grpc_keepalive_time
+build --grpc_keepalive_time=30s
+
+# ================================================================================================ #
+# Test Options
+# ================================================================================================ #
+
+# Output the test logs in case of failures.
+test --test_output=errors
+
+# Output up to 10MB of test logs.
+test --experimental_ui_max_stdouterr_bytes=10485760
+
+# Fixes a bug causing Bazel not to enable sandboxing for tests that are tagged
+# with tags=["exclusive"].
+test --incompatible_exclusive_test_sandboxed=true
+
+# Produce verbose warnings when tests are NOT tagged with their optimal timeout
+# or size values.
+test --test_verbose_timeout_warnings=true
+
+# ================================================================================================ #
+# Conditional Buildkite Configuration
+# ================================================================================================ #
+
+try-import %workspace%/user.bazelrc

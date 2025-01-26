@@ -1,0 +1,10 @@
+load("@local_config_platform//:constraints.bzl", "HOST_CONSTRAINTS")
+
+toolchain(
+    name = "host",
+    exec_compatible_with = HOST_CONSTRAINTS,  # Matches host platform.
+    target_compatible_with = HOST_CONSTRAINTS,  # Matches host platform.
+    toolchain = "@local_config_cc//:local",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    visibility = ["//visibility:public"],
+)
