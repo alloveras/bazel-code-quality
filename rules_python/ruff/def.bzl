@@ -27,13 +27,20 @@ fi
 exit "${{exit_code}}"
 """
 
+RUFF_SARIF_SCRIPT = """
+"{ruff}" check --quiet --exit-zero --config="{config}" --output-file="{out}.original" --output-format=sarif
+cat "{out}.original" | sed "s|file://${{PWD}}/||g" > "{out}"
+"""
+
 def _ruff_impl(ctx):
     toolchain = ctx.toolchains[RUFF_TOOLCHAIN_TYPE]
 
-    validation_outs = []
+    validation_outputs = []
+    static_analysis_outputs = []
 
     for src in ctx.files.srcs:
-        dummy_out = ctx.actions.declare_file(src.path + ".ruff.dummy")
+        dummy_out = ctx.actions.declare_file("%s.ruff" % src.basename)
+
         ctx.actions.run_shell(
             inputs = [src, toolchain.ruff, toolchain.configuration],
             outputs = [dummy_out],
@@ -44,19 +51,34 @@ def _ruff_impl(ctx):
                 out = dummy_out.path,
             ),
             env = {
-                "RUFF_CACHE_DIR": ".bazel-action-cache/ruff",
                 "FORCE_COLOR": "1",
             },
-            mnemonic = "RuffCheck",
+            progress_message = "Validating %{input}",
+            mnemonic = "RuffValidations",
             toolchain = RUFF_TOOLCHAIN_TYPE,
         )
 
-        validation_outs.append(dummy_out)
+        sarif_out = ctx.actions.declare_file("%s.ruff.sarif" % src.basename)
+        ctx.actions.run_shell(
+            inputs = [src, toolchain.ruff, toolchain.configuration],
+            outputs = [sarif_out],
+            command = RUFF_SARIF_SCRIPT.format(
+                ruff = toolchain.ruff.path,
+                config = toolchain.configuration.path,
+                out = sarif_out.path,
+            ),
+            progress_message = "Generating static analysis report for %{input}",
+            mnemonic = "RuffStaticAnalysisReport",
+            toolchain = RUFF_TOOLCHAIN_TYPE,
+        )
+
+        validation_outputs.append(dummy_out)
+        static_analysis_outputs.append(sarif_out)
 
     return [
-        DefaultInfo(),
         OutputGroupInfo(
-            _validation = validation_outs,
+            _validation = depset(validation_outputs),
+            static_analysis = depset(static_analysis_outputs),
         ),
     ]
 

@@ -136,7 +136,7 @@
   "moduleExtensions": {
     "//rules_python/ruff:extensions.bzl%ruff": {
       "general": {
-        "bzlTransitiveDigest": "7BL63cpSMV1qirUB72DImM0V6qn7Z4Sq+4nSsEfmnv8=",
+        "bzlTransitiveDigest": "oX2EYvEm6S+sPM5279gjmHslV8/nZ0xbeYpRDam6dbk=",
         "usagesDigest": "BKGMqClVoG3RTdOdVfJH4KvygFN9pXK5WM8UvrK1EkI=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
