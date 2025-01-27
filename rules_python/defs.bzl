@@ -1,4 +1,4 @@
-"""Defines Canva-opinionated rules_python drop-ins."""
+"""Defines opinionated rules_python drop-ins."""
 
 load(
     "@rules_python//python:defs.bzl",

@@ -9,19 +9,19 @@ exit_code=0
 echo "" > {out}
 
 if ! "{ruff}" check --quiet --config="{config}" "{src}" > {src}.ruff.check; then
-    echo "\033[1m=============================== Lint Errors ====================================\033[0m"
-    cat "{src}.ruff.check"
+    echo "\033[1m=============================== Lint Errors ====================================\033[0m" >&2
+    cat "{src}.ruff.check" >&2
     exit_code=1
 fi
 
 if ! "{ruff}" format --quiet --config="{config}" --check --diff "{src}" > {src}.ruff.format; then
-    echo "\033[1m============================== Format Errors ===================================\033[0m"
-    cat "{src}.ruff.format"
+    echo "\033[1m============================== Format Errors ===================================\033[0m" >&2
+    cat "{src}.ruff.format" >&2
     exit_code=1
 fi
 
 if [[ ${{exit_code}} -ne 0 ]]; then
-    echo "\033[1m================================================================================\033[0m"
+    echo "\033[1m================================================================================\033[0m" >&2
 fi
 
 exit "${{exit_code}}"
@@ -29,6 +29,10 @@ exit "${{exit_code}}"
 
 RUFF_SARIF_SCRIPT = """
 "{ruff}" check --quiet --exit-zero --config="{config}" --output-file="{out}.original" --output-format=sarif
+
+# Ruff produces SARIF files that contain absolute paths which make them not
+# reproducible/relocatable across different machines. Hence, we need to
+# post-process the SARIF file to strip them out.
 cat "{out}.original" | sed "s|file://${{PWD}}/||g" > "{out}"
 """
 
