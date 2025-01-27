@@ -1,0 +1,23 @@
+""""Defines Ruff toolchains."""
+
+ruff = use_extension("//rules_python/ruff:extensions.bzl", "ruff")
+
+# NB: The Linux artifacts use "musl" instead of "gnu" since they have slightly
+# better portability across distributions.
+ruff.github_toolchains(
+    version = "0.9.3",
+    artifacts = {
+        "ruff-aarch64-apple-darwin.tar.gz": "sha256-TczXyg3vG99FrKwYz18dHNoM/WsDmm2x6HqT/dEO1TA=",
+        "ruff-aarch64-pc-windows-msvc.zip": "sha256-Pq0wmeVS1g8+haQftknHA6WCXCLgitlyYfWokWJGNgQ=",
+        "ruff-aarch64-unknown-linux-musl.tar.gz": "sha256-d7kq4ElzQrYFbPvbk/TlIrJvKLE/2CjiTH4UbrW5LuE=",
+        "ruff-x86_64-apple-darwin.tar.gz": "sha256-SOKeNuAZeoHXSut/qNCw94k3iHnoujz0zoVWELDw8Fo=",
+        "ruff-x86_64-pc-windows-msvc.zip": "sha256-YOZ/G5Nz1dpxr1+YY6zyhCk2eylmZZNfLCufiismCpI=",
+        "ruff-x86_64-unknown-linux-musl.tar.gz": "sha256-mSjLvTTmRGEUeaR6kFw1txMvRXZpIjUooHfSdyef4i0=",
+    },
+)
+
+ruff.configuration(file = "//:pyproject.toml")
+
+use_repo(ruff, "ruff_toolchains")
+
+register_toolchains("@ruff_toolchains//...")

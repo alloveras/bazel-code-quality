@@ -1,0 +1,20 @@
+load("//rules_python:def.bzl", "py_binary", "py_library", "py_test")
+
+py_binary(
+    name = "calculator",
+    srcs = ["calculator.py"],
+    deps = [":math"],
+)
+
+py_library(
+    name = "math",
+    srcs = ["math.py"],
+)
+
+py_test(
+    name = "unit_tests",
+    size = "small",
+    srcs = ["math_test.py"],
+    main = "math_test.py",
+    deps = [":math"],
+)

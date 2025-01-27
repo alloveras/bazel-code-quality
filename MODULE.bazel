@@ -1,0 +1,33 @@
+"""Defines a Bazel module for this workspace."""
+
+# ============================================================================ #
+# Platforms
+# ============================================================================ #
+
+bazel_dep(name = "platforms", version = "0.0.11")
+
+host_platform = use_extension("@platforms//host:extension.bzl", "host_platform")
+
+use_repo(host_platform, "host_platform")
+
+# ============================================================================ #
+# Rules Python
+# ============================================================================ #
+
+bazel_dep(name = "rules_python", version = "1.1.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
+python.toolchain(python_version = "3.12", is_default = True)
+
+# ============================================================================ #
+# Ruff
+# ============================================================================ #
+
+include("//third_party/astral-sh:RUFF.MODULE.bazel")
+
+# ============================================================================ #
+# In-Workspace Toolchains
+# ============================================================================ #
+
+register_toolchains("//toolchains/...")
