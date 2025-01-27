@@ -1,1 +1,1 @@
-workspace(name = "com_canva_canvanauts_alloveras")
+workspace(name = "bazel_code_quality")
