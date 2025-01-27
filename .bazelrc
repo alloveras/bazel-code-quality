@@ -66,6 +66,11 @@ common --repo_env=ALL_PROXY
 common --repo_env=no_proxy
 common --repo_env=all_proxy
 
+# Run validation actions concurrently with tests.
+# TODO(alloveras): Remove this once the default value for this flag is true.
+# See: https://github.com/bazelbuild/bazel/pull/23637
+common --experimental_use_validation_aspect=true
+
 # ================================================================================================ #
 # Build & Query Options
 # Note that if a flag for `build` has an equivalent flag for `query`, it should be added here to

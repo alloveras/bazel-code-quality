@@ -6,6 +6,7 @@ import rules_python.tests.math as math
 def main() -> None:
     result = math.sum(10, 20)
     print("-- Calculator --")
+
     print(f"10 + 20 = {result}")
 
 

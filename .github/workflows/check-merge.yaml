@@ -18,7 +18,7 @@ jobs:
       # output group so that SARIF files are generated.
       - name: Build & Test
         id: build-and-test
-        run: bazel test --color=yes //... --output_groups=+static_analysis
+        run: bazel test --color=yes --keep_going=true --output_groups=+static_analysis //...
 
       # The Github action 'github/codeql-action/upload-sarif' chokes with
       # symlinks pointing to directories (e.g. bazel-bin). So, we copy the
