@@ -31,6 +31,8 @@ def _ruff_impl(mctx):
         configuration = configurations[0],
     )
 
+    return mctx.extension_metadata(reproducible = True)
+
 ruff = module_extension(
     implementation = _ruff_impl,
     tag_classes = {
