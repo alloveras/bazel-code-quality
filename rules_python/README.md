@@ -15,7 +15,7 @@ tools for Python with `rules_python`.
 
 - [X] Successful validation actions must produce no output.
 
-- [ ] Additional machine-readable validation output can be requested on-demand
+- [X] Additional machine-readable validation output can be requested on-demand
   (e.g. `sarif`, `jsonl`, `diff`) via Bazel output groups.
 
 - [ ] Code editors (e.g. `IntellJ`, `VSCode`) can be easily configured to
